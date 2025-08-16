@@ -6,7 +6,7 @@ function gerarFaturaStr(fatura, pecas) {
   }
 
   function calcularTotalApresentacao(apre) {
-    const peca = getPeca(apre); // busca a peça aqui dentro
+    const peca = getPeca(apre);
     let total = 0;
     switch (peca.tipo) {
       case "tragedia":
@@ -24,12 +24,37 @@ function gerarFaturaStr(fatura, pecas) {
     return total;
   }
 
+  function calcularCredito(apre) {
+    let creditos = 0;
+    creditos += Math.max(apre.audiencia - 30, 0);
+    if (getPeca(apre).tipo === "comedia") {
+      creditos += Math.floor(apre.audiencia / 5);
+    }
+    return creditos;
+  }
+
+  function formatarMoeda(valorEmCentavos) {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+    }).format(valorEmCentavos / 100);
+  }
+
+  let totalFatura = 0;
+  let creditosTotais = 0;
+
   let faturaStr = `Fatura ${fatura.cliente}\n`;
   for (let apre of fatura.apresentacoes) {
-    const pecaNome = getPeca(apre).nome; // usa a query diretamente
-    const valor = calcularTotalApresentacao(apre); // sem "peca" como argumento
-    faturaStr += `  ${pecaNome}: R$ ${(valor / 100).toFixed(2)} (${apre.audiencia} assentos)\n`;
+    const valor = calcularTotalApresentacao(apre);
+    totalFatura += valor;
+    creditosTotais += calcularCredito(apre);
+
+    faturaStr += `  ${getPeca(apre).nome}: ${formatarMoeda(valor)} (${apre.audiencia} assentos)\n`;
   }
+
+  faturaStr += `Valor total: ${formatarMoeda(totalFatura)}\n`;
+  faturaStr += `Créditos acumulados: ${creditosTotais} \n`;
 
   return faturaStr;
 }
